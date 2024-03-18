@@ -1,5 +1,6 @@
-const taskList = [];
+let taskList = [];
 const entryElm = document.getElementById("entryList");
+const badElm = document.getElementById("badList");
 
 const tWkHr = 7 * 24;
 
@@ -14,25 +15,27 @@ const handleOnSubmit = (form) => {
     task,
     hr,
     type: "entry",
+    id: randomIdGenerator(),
   };
 
   //check if you have enought hour left to fit this incoming task
 
   const previousTtl = total();
   if (previousTtl + hr > tWkHr) {
-    return alert("Sorry boss not enought time letf!");
+    return alert("cant add more than this ");
   }
 
   taskList.push(obj);
   console.log(taskList);
   display();
   total();
+  form.reset();
 };
 
 const display = () => {
   let str = ``;
-
-  taskList.forEach((item, i) => {
+  const temArg = taskList.filter((item) => item.type === "entry");
+  temArg.forEach((item, i) => {
     console.log(item);
     str += `
    <tr>
@@ -40,10 +43,12 @@ const display = () => {
 <td>${item.task}</td>
 <td>${item.hr}hrs</td>
 <td class="text-end">
-  <button onclick="handOnDelete(${i})" class="btn btn-danger btn-sm">
+  <button onclick="handOnDelete('${item.id}')" class="btn btn-danger btn-sm">
     <i class="fa-solid fa-trash"></i>
   </button>
-  <button class="btn btn-success btn-sm">
+  <button onclick="switchTask('${
+    item.id
+  }', 'bad')" class="btn btn-success btn-sm">
     <i class="fa-sharp fa-solid fa-arrow-right-long"></i>
   </button>
 </td>
@@ -51,6 +56,36 @@ const display = () => {
   });
 
   entryElm.innerHTML = str;
+  displayBadList();
+};
+
+const displayBadList = () => {
+  let str = ``;
+
+  const temArg = taskList.filter((item) => item.type === "bad");
+  temArg.forEach((item, i) => {
+    console.log(item);
+    str += `
+   <tr>
+<th>${i + 1}</th>
+<td>${item.task}</td>
+<td>${item.hr}hrs</td>
+<td class="text-end">
+ 
+  <button  class="btn btn-warning btn-sm">
+    <i class="fa-sharp fa-solid fa-arrow-left-long"></i>
+  </button>
+  <button onclick="handOnDelete('${item.id}')" class="btn btn-danger btn-sm">
+  <i class="fa-solid fa-trash"></i>
+</button>
+</td>
+</tr>`;
+  });
+  badElm.innerHTML = str;
+  const badHrs = temArg.reduce((acc, item) => {
+    return acc + item.hr;
+  }, 0);
+  document.getElementById("badHrs").innerText = badHrs;
 };
 
 //[{task: "dd", hr:"88"}]
@@ -63,17 +98,35 @@ const total = () => {
   document.getElementById("ttlHrs").innerText = ttl;
   return ttl;
 };
+
 const handOnDelete = (id) => {
-  if (window.confirm("cant")) {
-    taskList.splice(id, 1);
+  if (window.confirm("Are you sure, you want to delete the item?")) {
+    taskList = taskList.filter((item) => item.id !== id);
     display();
+    total();
   }
 };
-// const randomIdGenerator = () => {
-//   const idLenght = 6;
-//   const str = "abcdefghijklmnopqrstuvwxyz132123ohdsoho123123";
 
-//   const randomPositon = math.roudn(Math.random() * str);
-//   str[randomPositon];
-//   let id = ""
-//   for(let i =0; i < idLenght; i++)};
+const switchTask = (id, type) => {
+  console.log(id, type);
+
+  taskList = taskList.map((item) => {
+    if (item.id === id) item.type = type;
+
+    return item;
+  });
+  display();
+};
+
+const randomIdGenerator = () => {
+  const idLength = 6;
+  const str =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz12312323434545656767878909";
+
+  let id = "";
+  for (let i = 0; i < idLength; i++) {
+    const randomPosition = Math.floor(Math.random() * str.length);
+    id += str[randomPosition];
+  }
+  return id;
+};
